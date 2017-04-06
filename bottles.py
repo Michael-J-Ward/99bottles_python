@@ -1,56 +1,76 @@
 class Bottles:
 
-    NoMore = staticmethod(lambda verse: (
-        "No more bottles of beer on the wall, " +
-        "no more bottles of beer.\n" +
-        "Go to the store and buy some more, " +
-        "99 bottles of beer on the wall.\n"
-    ))
-
-    LastOne = staticmethod(lambda verse: (
-        "1 bottle of beer on the wall, " +
-        "1 bottle of beer.\n" +
-        "Take it down and pass it around, " +
-        "no more bottles of beer on the wall.\n"
-    ))
-
-    Penultimate = staticmethod(lambda verse: (
-        "2 bottles of beer on the wall, " +
-        "2 bottles of beer.\n" +
-        "Take one down and pass it around, " +
-        "1 bottle of beer on the wall.\n"
-    ))
-
-    Default = staticmethod(lambda verse: (
-        f"{verse.number} bottles of beer on the wall, " +
-        f"{verse.number} bottles of beer.\n" +
-        "Take one down and pass it around, " +
-        f"{verse.number - 1} bottles of beer on the wall.\n"
-    ))
-
     def song(self):
         return self.verses(99, 0)
 
-    def verses(self, start, finish):
-        return "\n".join(self.verse(n) for n in range(start, finish - 1, -1))
+    def verses(self, bottles_at_start, bottles_at_end):
+        return "\n".join(
+            self.verse(bottles) for bottles in
+            range(bottles_at_start, bottles_at_end - 1, -1)
+        )
 
-    def verse(self, number):
-        return self.verse_for(number).text()
-
-    def verse_for(self, number):
-        templates = {
-            0: Verse(0, self.NoMore),
-            1: Verse(1, self.LastOne),
-            2: Verse(2, self.Penultimate),
-        }
-        return templates.get(number, Verse(number, self.Default))
+    def verse(self, bottles):
+        return str(Round(bottles))
 
 
-class Verse:
+class Round:
 
-    def __init__(self, number, lyrics):
-        self.number = number
-        self.lyrics = lyrics
+    def __init__(self, bottles):
+        self.bottles = bottles
 
-    def text(self):
-        return self.lyrics(self)
+    def __str__(self):
+        return self.challenge() + self.response()
+
+    def challenge(self):
+        return (
+            self.bottles_of_beer().capitalize() + " " + self.on_wall() +
+            ", " + self.bottles_of_beer() + ".\n"
+        )
+
+    def response(self):
+        return (
+            self.go_to_the_store_or_take_one_down() + ", " +
+            self.bottles_of_beer() + " " + self.on_wall() + ".\n"
+        )
+
+    def bottles_of_beer(self):
+        return (
+            f"{self.anglicized_bottle_count()} " +
+            f"{self.pluralized_bottle_form()} of {self.beer()}"
+        )
+
+    def beer(self):
+        return "beer"
+
+    def on_wall(self):
+        return "on the wall"
+
+    def pluralized_bottle_form(self):
+        return 'bottle' if self.is_last_beer() else 'bottles'
+
+    def anglicized_bottle_count(self):
+        return "no more" if self.are_all_out() else str(self.bottles)
+
+    def go_to_the_store_or_take_one_down(self):
+        if self.are_all_out():
+            self.bottles = 99
+            return self.buy_new_beer()
+        else:
+            lyrics = self.drink_beer()
+            self.bottles -= 1
+            return lyrics
+
+    def buy_new_beer(self):
+        return "Go to the store and buy some more"
+
+    def drink_beer(self):
+        return f"Take {self.it_or_one()} down and pass it around"
+
+    def it_or_one(self):
+        return "it" if self.is_last_beer() else "one"
+
+    def are_all_out(self):
+        return self.bottles == 0
+
+    def is_last_beer(self):
+        return self.bottles == 1
